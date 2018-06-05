@@ -10,6 +10,7 @@ lang: fr
 L'ajout de la fonctionnalité permettant de connecter des bases de données aux applications Express consiste simplement à charger un pilote Node.js approprié pour les bases de données de votre application. Ce document explique brièvement comment ajouter et utiliser dans votre application Express certains des modules Node.js les plus populaires pour les systèmes de base de données :
 
 * [Cassandra](#cassandra)
+* [Couchbase](#couchbase)
 * [CouchDB](#couchdb)
 * [LevelDB](#leveldb)
 * [MySQL](#mysql)
@@ -18,6 +19,7 @@ L'ajout de la fonctionnalité permettant de connecter des bases de données aux 
 * [Oracle](#oracle)
 * [PostgreSQL](#postgres)
 * [Redis](#redis)
+* [SQL Server](#sql-server)
 * [SQLite](#sqlite)
 * [ElasticSearch](#elasticsearch)
 
@@ -50,6 +52,48 @@ client.execute('select key from system.local', function(err, result) {
   if (err) throw err;
   console.log(result.rows[0]);
 });
+</code>
+</pre>
+
+<a name="couchbase"></a>
+
+## Couchbase
+
+**Module**: [couchnode](https://github.com/couchbase/couchnode)
+**Installation**
+
+<pre>
+<code class="language-sh" translate="no">
+$ npm install couchbase
+</code>
+</pre>
+
+**Exemple**
+
+<pre>
+<code class="language-javascript" translate="no">
+var couchbase = require('couchbase')
+var bucket = (new couchbase.Cluster('http://localhost:8091')).openBucket('bucketName')
+
+// add a document to a bucket
+bucket.insert('document-key', { name: 'Matt', shoeSize: 13 }, function (err, result) {
+  if (err) {
+    console.log(err)
+  } else {
+  console.log(result)
+  }
+})
+
+// get all documents with shoe size 13
+var n1ql = 'SELECT d.* FROM `bucketName` d WHERE shoeSize = $1'
+var query = N1qlQuery.fromString(n1ql)
+bucket.query(query, [13], function (err, result) {
+  if (err) {
+    console.log(err)
+  } else {
+    console.log(result)
+  }
+})
 </code>
 </pre>
 
@@ -335,6 +379,68 @@ client.hkeys('hash key', function (err, replies) {
   client.quit();
 
 });
+</code>
+</pre>
+
+
+<a name="sql-server"></a>
+
+## SQL Server
+
+**Module**: [tedious](https://github.com/tediousjs/tedious)
+**Installation**
+
+<pre>
+<code class="language-sh" translate="no">
+$ npm install tedious
+</code>
+</pre>
+
+**Exemple**
+
+<pre>
+<code class="language-javascript" translate="no">
+var Connection = require('tedious').Connection;
+var Request = require('tedious').Request;
+
+var config = {
+  userName: 'your_username', // update me
+  password: 'your_password', // update me
+  server: 'localhost'
+}
+
+var connection = new Connection(config);
+
+connection.on('connect', function(err) {
+  if (err) {
+    console.log(err);
+  } else {
+    executeStatement();
+  }
+});
+
+function executeStatement() {
+  request = new Request("select 123, 'hello world'", function(err, rowCount) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(rowCount + ' rows');
+    }
+    connection.close();
+  });
+
+  request.on('row', function(columns) {
+    columns.forEach(function(column) {
+      if (column.value === null) {
+        console.log('NULL');
+      } else {
+        console.log(column.value);
+      }
+    });
+  });
+
+  connection.execSql(request);
+}
 </code>
 </pre>
 
